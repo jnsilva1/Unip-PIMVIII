@@ -82,7 +82,7 @@ namespace CadastroPessoaFisica
         /// <exception cref="InvalidOperationException">Quando a expressão tiver comandos não permitidos</exception>
         protected DataTable ExecuteQueryStatement(string expression, List<SqlParameter> parameters = null)
         {
-            DataTable response = null;
+            DataTable response = new DataTable();
             //Valida a expressão
             if (IsExpressionValid(expression: expression, allowedOperation: null) == false)
                 throw new InvalidOperationException(message: "Expressão inválida. É permitido apenas operação de consulta.");
@@ -95,7 +95,6 @@ namespace CadastroPessoaFisica
                     {
                         if (parameters != null)
                             parameters.ForEach(parameter => adapter.SelectCommand.Parameters.Add(value: parameter));
-                        response = new DataTable();
                         adapter.Fill(dataTable: response);
                     }
                 }

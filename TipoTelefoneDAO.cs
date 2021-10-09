@@ -7,19 +7,6 @@ namespace CadastroPessoaFisica
 {
     class TipoTelefoneDAO
     {
-        SqlConnection Connection;
-        /// <summary>
-        /// Cria a instância do objeto responsável pelas transações no banco de dados para a tabela TELEFONE_TIPO
-        /// </summary>
-        /// <param name="connectionString">Cadeia de conexão com o banco de dados</param>
-        public TipoTelefoneDAO(string connectionString)
-            => SetConnectionString(connectionString);
-        /// <summary>
-        /// Cria a instância de conexão com o SQL Server
-        /// </summary>
-        /// <param name="connectionString">Cadeia de conexão com o banco de dados</param>
-        void SetConnectionString(string connectionString)
-            => Connection = new SqlConnection(connectionString: connectionString ?? throw new ArgumentNullException(paramName: nameof(connectionString)));
         /// <summary>
         /// Carrega todos os tipos de telefone cadastrados no banco de dados
         /// </summary>
@@ -28,25 +15,13 @@ namespace CadastroPessoaFisica
         {
             List<TipoTelefone> tipoTelefones = new List<TipoTelefone>();
             string consulta = "SELECT * FROM TELEFONE_TIPO";
-            using (SqlCommand comando = new SqlCommand(cmdText: consulta, connection: Connection))
+            using (var data = DataHelper.ExecuteQuery(query: consulta))
             {
-                try
+                if(data.Rows.Count > 0)
                 {
-                    if (Connection.State == System.Data.ConnectionState.Open)
-                        Connection.Close();
-
-                    Connection.Open();
-
-                    SqlDataReader reader = comando.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        tipoTelefones.Add(new TipoTelefone { Id = Convert.ToInt32(reader["ID"]), Tipo = reader["TIPO"].ToString() });
-                    }
-                    reader.Close();
-                }
-                finally
-                {
-                    Connection.Close();
+                    var rows = data.Rows;
+                    for(int index = 0; index < rows.Count; index++)
+                        tipoTelefones.Add(new TipoTelefone { Id = Convert.ToInt32(rows[index]["ID"]), Tipo = rows[index]["TIPO"].ToString() });
                 }
             }
             return tipoTelefones;
@@ -63,26 +38,12 @@ namespace CadastroPessoaFisica
             {
                 if (tipo.Id > 0)
                 {
-                    string exclusao = "DELETE TELEFONE_TIPO WHERE ID = @ID";
-                    using (SqlDataAdapter adaptador = new SqlDataAdapter(new SqlCommand(cmdText: exclusao, connection: Connection)))
-                    {
-                        try
-                        {
-                            if (Connection.State == System.Data.ConnectionState.Open)
-                                Connection.Close();
-
-                            Connection.Open();
-                            adaptador.DeleteCommand.Parameters.AddWithValue(parameterName: "ID", value: tipo.Id);
-                            while (adaptador.DeleteCommand.ExecuteReader().Read())
-                            {
-                                sucedido = true;
+                    sucedido = DataHelper.ExecuteDelete(
+                        command: "DELETE TELEFONE_TIPO WHERE ID = @ID", 
+                        parameters: new List<SqlParameter> { 
+                               new SqlParameter(parameterName: "ID", value: tipo.Id) { DbType = System.Data.DbType.Int32, SqlDbType = System.Data.SqlDbType.Int } 
                             }
-                        }
-                        finally
-                        {
-                            Connection.Close();
-                        }
-                    }
+                        );
                 }
             }
             return sucedido;
@@ -99,27 +60,12 @@ namespace CadastroPessoaFisica
             {
                 if (tipo.Id == 0)
                 {
-                    string exclusao = "INSERT INTO TELEFONE_TIPO (ID, TIPO) VALUES (@ID, @TIPO)";
-                    using (SqlCommand comando = new SqlCommand(cmdText: exclusao, connection: Connection))
-                    {
-                        try
-                        {
-                            if (Connection.State == System.Data.ConnectionState.Open)
-                                Connection.Close();
-
-                            Connection.Open();
-                            comando.Parameters.AddWithValue(parameterName: "ID", value: tipo.Id);
-                            comando.Parameters.AddWithValue(parameterName: "TIPO", value: tipo.Tipo);
-                            while (comando.ExecuteReader().Read())
-                            {
-                                sucedido = true;
-                            }
-                        }
-                        finally
-                        {
-                            Connection.Close();
-                        }
-                    }
+                    sucedido = DataHelper.ExecuteInsert(
+                        command: "INSERT INTO TELEFONE_TIPO (ID, TIPO) VALUES (@ID, @TIPO)",
+                        parameters: new List<SqlParameter> {
+                            new SqlParameter(parameterName: "ID", value: tipo.Id) { DbType = System.Data.DbType.Int32, SqlDbType = System.Data.SqlDbType.Int },
+                            new SqlParameter(parameterName: "TIPO", value: tipo.Tipo) { DbType = System.Data.DbType.String, SqlDbType = System.Data.SqlDbType.VarChar }
+                        });
                 }
             }
             return sucedido;
@@ -135,25 +81,15 @@ namespace CadastroPessoaFisica
             //Poderia simplificar a verificação abaixo, no entanto, a forma como está, facilita ainda mais o raciocionio durante a leitura para programadores iniciantes
             if (string.IsNullOrEmpty(tipo) == false)
             {
-                string exclusao = "SELECT * FROM TELEFONE_TIPO WHERE TIPO LIKE '%@TIPO%'";
-                using (SqlCommand comando = new SqlCommand(cmdText: exclusao, connection: Connection))
+                using (var data = DataHelper.ExecuteQuery(
+                    query: "SELECT * FROM TELEFONE_TIPO WHERE TIPO LIKE '%@TIPO%'",
+                    parameters: new List<SqlParameter> {
+                        new SqlParameter(parameterName: "TIPO", value: tipo) { DbType = System.Data.DbType.String, SqlDbType = System.Data.SqlDbType.VarChar }
+                    }))
                 {
-                    try
+                    if (data.Rows.Count > 0)
                     {
-                        if (Connection.State == System.Data.ConnectionState.Open)
-                            Connection.Close();
-
-                        Connection.Open();
-                        comando.Parameters.AddWithValue(parameterName: "TIPO", value: tipo);
-                        SqlDataReader leitor = comando.ExecuteReader();
-                        while (leitor.Read())
-                        {
-                            retorno = new TipoTelefone { Id = Convert.ToInt32(leitor["ID"]), Tipo = leitor["TIPO"].ToString() };
-                        }
-                    }
-                    finally
-                    {
-                        Connection.Close();
+                        retorno = new TipoTelefone { Id = Convert.ToInt32(data.Rows[0]["ID"]), Tipo = data.Rows[0]["TIPO"].ToString() };
                     }
                 }
             }
