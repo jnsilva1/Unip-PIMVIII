@@ -95,10 +95,27 @@ namespace CadastroPessoaFisica
             }
             return retorno;
         }
-
+        /// <summary>
+        /// Busca o tipo de telefone com base no id informado
+        /// </summary>
+        /// <param name="id">Id do tipo de telefone</param>
+        /// <returns><see cref="TipoTelefone"/></returns>
         public TipoTelefone ObtemTipoTelefone(int id)
         {
-            throw new NotImplementedException();
+            TipoTelefone retorno = null;
+            //Poderia simplificar a verificação abaixo, no entanto, a forma como está, facilita ainda mais o raciocionio durante a leitura para programadores iniciantes
+            using (var data = DataHelper.ExecuteQuery(
+                query: "SELECT * FROM TELEFONE_TIPO WHERE ID = @ID",
+                parameters: new List<SqlParameter> {
+                    new SqlParameter(parameterName: "ID", value: id) { DbType = System.Data.DbType.Int32, SqlDbType = System.Data.SqlDbType.Int }
+                }))
+            {
+                if (data.Rows.Count > 0)
+                {
+                    retorno = new TipoTelefone { Id = Convert.ToInt32(data.Rows[0]["ID"]), Tipo = data.Rows[0]["TIPO"].ToString() };
+                }
+            }
+            return retorno;
         }
     }
 }
