@@ -7,11 +7,6 @@ namespace CadastroPessoaFisica
 {
     internal sealed class EnderecoDAO
     {
-        SqlConnection Connection;
-
-        void SetConnectionString(string connectionString)
-            => Connection = new SqlConnection(connectionString: connectionString ?? throw new ArgumentNullException(paramName: nameof(connectionString)));
-
         public bool Exclua(Endereco e)
         {
             throw new NotImplementedException();

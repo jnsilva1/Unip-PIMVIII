@@ -5,7 +5,7 @@ using System.Text;
 
 namespace CadastroPessoaFisica
 {
-    class TipoTelefoneDAO
+    sealed class TipoTelefoneDAO
     {
         /// <summary>
         /// Carrega todos os tipos de telefone cadastrados no banco de dados

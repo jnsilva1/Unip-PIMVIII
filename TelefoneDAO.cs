@@ -5,13 +5,8 @@ using System.Text;
 
 namespace CadastroPessoaFisica
 {
-    class TelefoneDAO
+    sealed class TelefoneDAO
     {
-        SqlConnection Connection;
-
-        void SetConnectionString(string connectionString)
-            => Connection = new SqlConnection(connectionString: connectionString ?? throw new ArgumentNullException(paramName: nameof(connectionString)));
-
         public bool Exclua(Telefone t)
         {
             throw new NotImplementedException();
@@ -33,6 +28,11 @@ namespace CadastroPessoaFisica
         }
 
         public Telefone Consulta(int ddd, int numero)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<Telefone> TelefonesDaPessoa(Pessoa p)
         {
             throw new NotImplementedException();
         }
