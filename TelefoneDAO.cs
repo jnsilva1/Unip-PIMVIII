@@ -16,7 +16,7 @@ namespace CadastroPessoaFisica
         public static bool Exclua(Telefone telefone)
         {
             bool resposta = false;
-            if (telefone != null)
+            if (telefone != null && PossuiVinculo(telefone: telefone) == false)
             {
                 resposta = DataHelper.ExecuteDelete(
                     command: "DELETE TELEFONE WHERE ID = @ID",
@@ -224,5 +224,29 @@ namespace CadastroPessoaFisica
         /// <returns><see cref="Telefone"/></returns>
         private static Telefone Popula(DataRow row)
         => row != null ? new Telefone { Id = Convert.ToInt32(value: row["ID"]), Ddd = Convert.ToInt32(value: row["DDD"]), Numero = Convert.ToInt32(value: row["NUMERO"]), Tipo = TipoTelefoneDAO.ObtemTipoTelefone(id: Convert.ToInt32(value: row["TIPO"])) } : null;
+        /// <summary>
+        /// Verifica se o telefone informado possui vínculo com alguma pessoa
+        /// </summary>
+        /// <param name="telefone">Telefone que se quer verificar o vinculo</param>
+        /// <returns><see cref="bool"/> indicando se há ou não vinculo</returns>
+        private static bool PossuiVinculo(Telefone telefone)
+        {
+            bool resposta = false;
+            if(telefone != null)
+            {
+                try {
+                    using (DataTable data = DataHelper.ExecuteQuery(
+                        query: "SELECT * FROM PESSOA_TELEFONE WHERE PESSOA_TELEFONE.ID_TELEFONE = @ID_TELEFONE",
+                        parameters: new List<SqlParameter> {
+                            new SqlParameter(parameterName: "ID_TELEFONE", value: telefone.Id){DbType = DbType.Int32, SqlDbType = SqlDbType.Int }
+                        }))
+                    {
+                        resposta = data.Rows.Count > 0;
+                    }
+                }
+                catch { }
+            }
+            return resposta;
+        }
     }
 }
