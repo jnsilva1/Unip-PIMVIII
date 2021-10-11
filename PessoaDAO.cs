@@ -11,17 +11,89 @@ namespace CadastroPessoaFisica
     {
         public static bool Exclua(Pessoa p)
         {
-            throw new NotImplementedException();
-        }
+            bool resposta = false;
+            if (p != null)
+            {
+                #region Etapa 1 - Excluo o vinculo com os telefones
+                RemoveVinculoComTelefones(pessoa: p);
+                #endregion
 
+                #region Etapa 2 - Excluo a pessoa
+                resposta = DataHelper.ExecuteDelete(
+                        command:"DELETE PESSOA WHERE ID = @ID",
+                        parameters: new List<SqlParameter> {
+                            new SqlParameter(parameterName: "ID", value: p.Id){DbType = DbType.Int32, SqlDbType = SqlDbType.Int}
+                        });
+                #endregion
+
+                #region Etapa 3 - Excluo o Endereço
+                EnderecoDAO.Exclua(endereco: p.Endereco);
+                #endregion
+            }
+            return resposta;
+        }
+        /// <summary>
+        /// Realiza a inserção de uma nova pessoa no banco de dados
+        /// </summary>
+        /// <param name="p">Pessoa a ser inserida no banco de dados</param>
+        /// <returns><see cref="bool"/> indicando se a inserção foi realizada com sucesso.</returns>
         public static bool Insira(Pessoa p)
         {
-            throw new NotImplementedException();
-        }
+            bool resposta = false;
+            //Só realizo a inserção se pessoa for uma referência válida, não tiver id e não existir pessoa cadastrada com o mesmo cpf
+            if (p != null && p.Id == 0 && Consulte(cpf: p.Cpf) == null)
+            {
+                #region Etapa 1 - Cadastra o Endereço
+                ValidaAlteracaoEndereco(pessoa: p);
+                #endregion
 
+                #region Etapa 2 - Cadastro a pessoa
+                resposta = DataHelper.ExecuteInsert(
+                    command: "INSERT INTO PESSOA (ID, NOME, CPF, ENDERECO) VALUES(@ID, @NOME, @CPF, @ENDERECO)", 
+                    parameters: new List<SqlParameter> {
+                        new SqlParameter(parameterName: "ID", value: p.Id){DbType = DbType.Int32, SqlDbType = SqlDbType.Int},
+                        new SqlParameter(parameterName: "NOME", value: p.Nome){DbType = DbType.String, SqlDbType = SqlDbType.VarChar},
+                        new SqlParameter(parameterName: "CPF", value: p.Cpf){DbType = DbType.Int64, SqlDbType = SqlDbType.BigInt},
+                        new SqlParameter(parameterName: "ENDERECO", value: p.Endereco.Id){DbType = DbType.Int32, SqlDbType = SqlDbType.Int}
+                    });
+                #endregion
+
+                #region Etapa 3 - Cadastra os telefones
+                ValidaAlteracoesTelefone(pessoa: p);
+                #endregion
+            }
+            return resposta;
+        }
+        /// <summary>
+        /// Realiza a alteração nos dados da pessoa
+        /// </summary>
+        /// <param name="p">Pessoa a ser alterada</param>
+        /// <returns><see cref="bool"/> indicando se a alteração foi realizada com sucesso</returns>
         public static bool Altere(Pessoa p)
         {
-            throw new NotImplementedException();
+            bool resposta = false;
+            //Só realizo a inserção se pessoa for uma referência válida, não tiver id e não existir pessoa cadastrada com o mesmo cpf
+            if (p != null && p.Id > 0)
+            {
+                #region Etapa 1 - Cadastra o Endereço
+                ValidaAlteracaoEndereco(pessoa: p);
+                #endregion
+
+                #region Etapa 2 - Cadastro a pessoa
+                resposta = DataHelper.ExecuteUpdate(
+                    command: "UPDATETE PESSOA SET NOME = @NOME, ENDERECO = @ENDERECO WHERE ID = @ID",
+                    parameters: new List<SqlParameter> {
+                        new SqlParameter(parameterName: "ID", value: p.Id){DbType = DbType.Int32, SqlDbType = SqlDbType.Int},
+                        new SqlParameter(parameterName: "NOME", value: p.Nome){DbType = DbType.String, SqlDbType = SqlDbType.VarChar},
+                        new SqlParameter(parameterName: "ENDERECO", value: p.Endereco.Id){DbType = DbType.Int32, SqlDbType = SqlDbType.Int}
+                    });
+                #endregion
+
+                #region Etapa 3 - Cadastra os telefones
+                ValidaAlteracoesTelefone(pessoa: p);
+                #endregion
+            }
+            return resposta;
         }
         /// <summary>
         /// Consulta os dados da pessoa a partir do CPF
@@ -107,5 +179,45 @@ namespace CadastroPessoaFisica
                 });
             }
         }
+        /// <summary>
+        /// Verifica se a pessoa está adicionando um endereço, alterando para um novo endereço, ou apenas informações do mesmo endereço
+        /// </summary>
+        /// <param name="pessoa">Pessoa a que se refere o endereço</param>
+        private static void ValidaAlteracaoEndereco(Pessoa pessoa)
+        {
+            try
+            {
+                Endereco enderecoAnterior = Consulte(cpf: pessoa.Cpf).Endereco;
+                //Se existe endereço anterior e endereço atual, continuo a verificação
+                if (enderecoAnterior != null && pessoa.Endereco != null)
+                {
+                    //Se estou alterando o endereço, excluo o anterior.
+                    if (enderecoAnterior.Id != pessoa.Endereco.Id)
+                        EnderecoDAO.Exclua(endereco: enderecoAnterior);
+                    else
+                        //Agora verifico se devo inserir ou atualizar
+                        if (pessoa.Endereco.Id == 0)
+                            EnderecoDAO.Insira(endereco: pessoa.Endereco);
+                        else
+                            EnderecoDAO.Altere(endereco: pessoa.Endereco);
+                }
+            }
+            catch { }
+        }
+        /// <summary>
+        /// Verifica no banco de dados se há alguma pessoa vinculada ao endereço informado
+        /// </summary>
+        /// <param name="endereco">Endereço que se quer verificar o vinculo</param>
+        /// <param name="pessoa">Pessoa que deve ser desconsiderada para validação de vinculo.</param>
+        /// <returns><see cref="bool"/>Indicando se há ou não vinculo</returns>
+        internal static bool OutraPessoaPossuiVinculoComEndereco(Endereco endereco)
+        => endereco == null ? 
+            false : 
+            DataHelper.ExecuteQuery(
+                query: "SELECT * FROM PESSOA WHERE PESSOA.ENDERECO = @ID_ENDERECO", 
+                parameters: new List<SqlParameter> { 
+                    new SqlParameter(parameterName: "ID_ENDERECO", value: endereco.Id) { DbType = DbType.Int32, SqlDbType = SqlDbType.Int }
+                }).Rows.Count > 0;
+
     }
 }
