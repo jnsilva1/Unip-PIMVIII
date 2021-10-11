@@ -16,12 +16,13 @@ namespace CadastroPessoaFisica
         public static bool Exclua(Endereco endereco)
         {
             bool resposta = false;
-            if (endereco != null && endereco.Id > 0)
+            //´Só realizo a exclusão de endereço for uma referência válida, e tiver id e não tiver vinculo com outras pessoas
+            if (endereco != null && endereco.Id > 0 && PessoaDAO.OutraPessoaPossuiVinculoComEndereco(endereco: endereco) == false)
             {
                 resposta = DataHelper.ExecuteDelete(
                         command: "DELETE ENDERECO WHERE ID = @ID",
                         parameters: new List<SqlParameter> {
-                             new SqlParameter(parameterName: "ID", value: endereco.Id = ProximaSequencia()){DbType = DbType.Int32, SqlDbType = SqlDbType.Int }
+                             new SqlParameter(parameterName: "ID", value: endereco.Id){DbType = DbType.Int32, SqlDbType = SqlDbType.Int }
                         });
             }
             return resposta;
@@ -63,7 +64,7 @@ namespace CadastroPessoaFisica
                 resposta = DataHelper.ExecuteUpdate(
                         command: "UPDATE ENDERECO SET LOGRADOURO = @LOGRADOURO, NUMERO = @NUMERO WHERE  ID = @ID",
                         parameters: new List<SqlParameter> {
-                             new SqlParameter(parameterName: "ID", value: endereco.Id = ProximaSequencia()){DbType = DbType.Int32, SqlDbType = SqlDbType.Int },
+                             new SqlParameter(parameterName: "ID", value: endereco.Id){DbType = DbType.Int32, SqlDbType = SqlDbType.Int },
                              new SqlParameter(parameterName: "LOGRADOURO", value: endereco.Logradouro){DbType = DbType.String, SqlDbType = SqlDbType.VarChar},
                              new SqlParameter(parameterName: "NUMERO", value: endereco.Numero){DbType = DbType.Int32, SqlDbType = SqlDbType.Int }
                         });
