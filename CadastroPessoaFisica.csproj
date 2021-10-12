@@ -2,6 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>José Silva</Authors>
+    <Company>José Silva</Company>
+    <Description>Biblioteca de classes para acesso a treco de banco de dados com intuito de cumprir os requistos do PIM VIII/2021 da Universidade Paulista no objetivo de obtenção de Certificado para Análise e Desenvolvimento de Sistemas por EaD.</Description>
+    <Copyright />
+    <RepositoryUrl>https://github.com/jnsilva1/Unip-PIMVIII</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <PackageProjectUrl>https://github.com/jnsilva1/Unip-PIMVIII</PackageProjectUrl>
+    <PackageLicenseExpression></PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
