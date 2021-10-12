@@ -11,10 +11,30 @@
     <RepositoryType>Git</RepositoryType>
     <PackageProjectUrl>https://github.com/jnsilva1/Unip-PIMVIII</PackageProjectUrl>
     <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+    <NeutralLanguage>pt-BR</NeutralLanguage>
+    <PackageIcon>PIMVIII.png</PackageIcon>
+    <PackageIconUrl />
+    <PackageTags>UNIP; PIMVIII</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\Downloads\PIMVIII.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="LICENSE.md">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="LICENSE.md">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
