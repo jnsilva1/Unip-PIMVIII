@@ -16,6 +16,7 @@
     <PackageIcon>PIMVIII.png</PackageIcon>
     <PackageIconUrl />
     <PackageTags>UNIP; PIMVIII</PackageTags>
+    <Version>1.0.01</Version>
   </PropertyGroup>
 
   <ItemGroup>
