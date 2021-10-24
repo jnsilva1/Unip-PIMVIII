@@ -26,7 +26,7 @@ namespace CadastroPessoaFisica
         /// </summary>
         /// <param name="connectionString">Cadeia de conexão com o banco de dados</param>
         internal static void SetConnectionString(string connectionString)
-            => connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+            => ConnectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
         
         /// <summary>
         /// Verifica se a partir da cadeia de conexão foi possível conectar ao banco de dados
