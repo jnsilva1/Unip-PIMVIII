@@ -83,9 +83,9 @@ namespace CadastroPessoaFisica
             if (string.IsNullOrEmpty(tipo) == false)
             {
                 using (var data = DataHelper.ExecuteQuery(
-                    query: "SELECT * FROM TELEFONE_TIPO WHERE TIPO LIKE '%@TIPO%'",
+                    query: "SELECT * FROM TELEFONE_TIPO WHERE UPPER(TIPO) LIKE '%' + UPPER(@TIPOFONE) + '%'",
                     parameters: new List<SqlParameter> {
-                        new SqlParameter(parameterName: "TIPO", value: tipo) { DbType = System.Data.DbType.String, SqlDbType = System.Data.SqlDbType.VarChar }
+                        new SqlParameter(parameterName: "TIPOFONE", value: tipo) { DbType = System.Data.DbType.String, SqlDbType = System.Data.SqlDbType.VarChar }
                     }))
                 {
                     if (data.Rows.Count > 0)
@@ -125,6 +125,7 @@ namespace CadastroPessoaFisica
             using (var data = DataHelper.ExecuteQuery("SELECT MAX(ID) SEQUENCIA FROM TELEFONE_TIPO"))
             {
                 if (data.Rows.Count > 0)
+                    if(data.Rows[0]["SEQUENCIA"] is DBNull == false)
                     sequencia = Convert.ToInt32(data.Rows[0]["SEQUENCIA"]);
             }
             return sequencia + 1;

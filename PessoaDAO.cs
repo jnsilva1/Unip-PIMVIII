@@ -51,7 +51,7 @@ namespace CadastroPessoaFisica
                 resposta = DataHelper.ExecuteInsert(
                     command: "INSERT INTO PESSOA (ID, NOME, CPF, ENDERECO) VALUES(@ID, @NOME, @CPF, @ENDERECO)", 
                     parameters: new List<SqlParameter> {
-                        new SqlParameter(parameterName: "ID", value: p.Id){DbType = DbType.Int32, SqlDbType = SqlDbType.Int},
+                        new SqlParameter(parameterName: "ID", value: p.Id = ProximaSequencia()){DbType = DbType.Int32, SqlDbType = SqlDbType.Int},
                         new SqlParameter(parameterName: "NOME", value: p.Nome){DbType = DbType.String, SqlDbType = SqlDbType.VarChar},
                         new SqlParameter(parameterName: "CPF", value: p.Cpf){DbType = DbType.Int64, SqlDbType = SqlDbType.BigInt},
                         new SqlParameter(parameterName: "ENDERECO", value: p.Endereco.Id){DbType = DbType.Int32, SqlDbType = SqlDbType.Int}
@@ -76,12 +76,12 @@ namespace CadastroPessoaFisica
             if (p != null && p.Id > 0)
             {
                 #region Etapa 1 - Cadastra o Endereço
-                ValidaAlteracaoEndereco(pessoa: p);
+                var ende = ValidaAlteracaoEndereco(pessoa: p);
                 #endregion
 
                 #region Etapa 2 - Cadastro a pessoa
                 resposta = DataHelper.ExecuteUpdate(
-                    command: "UPDATETE PESSOA SET NOME = @NOME, ENDERECO = @ENDERECO WHERE ID = @ID",
+                    command: "UPDATE PESSOA SET NOME = @NOME, ENDERECO = @ENDERECO WHERE ID = @ID",
                     parameters: new List<SqlParameter> {
                         new SqlParameter(parameterName: "ID", value: p.Id){DbType = DbType.Int32, SqlDbType = SqlDbType.Int},
                         new SqlParameter(parameterName: "NOME", value: p.Nome){DbType = DbType.String, SqlDbType = SqlDbType.VarChar},
@@ -91,6 +91,11 @@ namespace CadastroPessoaFisica
 
                 #region Etapa 3 - Cadastra os telefones
                 ValidaAlteracoesTelefone(pessoa: p);
+                #endregion
+
+                #region Etapa 4 - Excluo endereço anterior
+                if (ende != null)
+                    EnderecoDAO.Exclua(endereco: ende);
                 #endregion
             }
             return resposta;
@@ -171,6 +176,7 @@ namespace CadastroPessoaFisica
                 });
 
                 telefonesParaAdicionar.ForEach(telefone => {
+                    telefone = TelefoneDAO.Consulta(ddd: telefone.Ddd, numero: telefone.Numero) ?? telefone;
                     if (telefone.Id == 0)
                         TelefoneDAO.Insira(telefone: telefone);
                     else
@@ -183,26 +189,53 @@ namespace CadastroPessoaFisica
         /// Verifica se a pessoa está adicionando um endereço, alterando para um novo endereço, ou apenas informações do mesmo endereço
         /// </summary>
         /// <param name="pessoa">Pessoa a que se refere o endereço</param>
-        private static void ValidaAlteracaoEndereco(Pessoa pessoa)
+        /// <returns>Endereço a ser excluido em caso de alteração</returns>
+        private static Endereco ValidaAlteracaoEndereco(Pessoa pessoa)
         {
+
+            Endereco endereco = null;
             try
             {
-                Endereco enderecoAnterior = Consulte(cpf: pessoa.Cpf).Endereco;
+                Endereco enderecoAnterior = (Consulte(cpf: pessoa.Cpf)?? new Pessoa()).Endereco;
                 //Se existe endereço anterior e endereço atual, continuo a verificação
                 if (enderecoAnterior != null && pessoa.Endereco != null)
                 {
+                    bool excluirEnderecoAnterior = false;
                     //Se estou alterando o endereço, excluo o anterior.
-                    if (enderecoAnterior.Id != pessoa.Endereco.Id)
-                        EnderecoDAO.Exclua(endereco: enderecoAnterior);
+                    if (enderecoAnterior.Equals(pessoa.Endereco) == false)
+                        excluirEnderecoAnterior = true;
                     else
-                        //Agora verifico se devo inserir ou atualizar
-                        if (pessoa.Endereco.Id == 0)
-                            EnderecoDAO.Insira(endereco: pessoa.Endereco);
-                        else
-                            EnderecoDAO.Altere(endereco: pessoa.Endereco);
+                        pessoa.Endereco = enderecoAnterior;//Já tenho o id, não preciso alterar nada
+                    
+                    //Agora verifico se devo inserir ou atualizar
+                    if (pessoa.Endereco.Id == 0)
+                        EnderecoDAO.Insira(endereco: pessoa.Endereco);
+                    else
+                        EnderecoDAO.Altere(endereco: pessoa.Endereco);
+
+                    if (excluirEnderecoAnterior)
+                        endereco = enderecoAnterior;
                 }
             }
             catch { }
+            return endereco;
+        }
+        /// <summary>
+        /// Devolve a próxima sequência disponível para o id da pessoa
+        /// </summary>
+        /// <returns></returns>
+        private static int ProximaSequencia()
+        {
+            int sequencia = 0;
+            using (var data = DataHelper.ExecuteQuery("SELECT MAX(ID) SEQUENCIA FROM PESSOA"))
+            {
+                if (data.Rows.Count > 0)
+                {
+                    if (data.Rows[0]["SEQUENCIA"] is DBNull == false)
+                        sequencia = Convert.ToInt32(data.Rows[0]["SEQUENCIA"]);
+                }
+            }
+            return sequencia + 1;
         }
         /// <summary>
         /// Verifica no banco de dados se há alguma pessoa vinculada ao endereço informado

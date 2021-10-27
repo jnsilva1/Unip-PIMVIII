@@ -121,7 +121,10 @@ namespace CadastroPessoaFisica
             using (var data = DataHelper.ExecuteQuery("SELECT MAX(ID) SEQUENCIA FROM ENDERECO"))
             {
                 if (data.Rows.Count > 0)
-                    sequencia = Convert.ToInt32(data.Rows[0]["SEQUENCIA"]);
+                {
+                    if(data.Rows[0]["SEQUENCIA"] is DBNull == false)
+                        sequencia = Convert.ToInt32(data.Rows[0]["SEQUENCIA"]);
+                }
             }
             return sequencia + 1;
         }

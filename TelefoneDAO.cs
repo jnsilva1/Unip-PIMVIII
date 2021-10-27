@@ -38,6 +38,7 @@ namespace CadastroPessoaFisica
             {
                 try
                 {
+                    telefone.Tipo = TipoTelefoneDAO.Consulte(tipo: telefone.Tipo.Tipo) ?? telefone.Tipo;
                     if (telefone.Tipo.Id == 0)
                         TipoTelefoneDAO.Insira(tipo: telefone.Tipo);
 
@@ -213,7 +214,8 @@ namespace CadastroPessoaFisica
             using (var data = DataHelper.ExecuteQuery("SELECT MAX(ID) SEQUENCIA FROM TELEFONE"))
             {
                 if (data.Rows.Count > 0)
-                    sequencia = Convert.ToInt32(data.Rows[0]["SEQUENCIA"]);
+                    if(data.Rows[0]["SEQUENCIA"] is DBNull == false)
+                        sequencia = Convert.ToInt32(data.Rows[0]["SEQUENCIA"]);
             }
             return sequencia + 1;
         }

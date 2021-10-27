@@ -11,10 +11,12 @@ namespace CadastroPessoaFisica
         public int Ddd { get; set; }
         public TipoTelefone Tipo { get; set; }
 
-        public override int GetHashCode()
+        public Telefone()
         {
-            return 2108858624 + Id.GetHashCode();
+            Tipo = new TipoTelefone();
         }
+
+        
 
         public override bool Equals(object obj)
         {
@@ -26,6 +28,14 @@ namespace CadastroPessoaFisica
             return other != null &&
                    Numero == other.Numero &&
                    Ddd == other.Ddd;
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = -202074280;
+            hashCode = hashCode * -1521134295 + Numero.GetHashCode();
+            hashCode = hashCode * -1521134295 + Ddd.GetHashCode();
+            return hashCode;
         }
     }
 }

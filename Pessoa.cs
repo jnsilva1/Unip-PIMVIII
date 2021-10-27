@@ -11,5 +11,10 @@ namespace CadastroPessoaFisica
         public long Cpf;
         public Endereco Endereco;
         public HashSet<Telefone> Telefones;
+        public Pessoa()
+        {
+            this.Endereco = new Endereco();
+            this.Telefones = new HashSet<Telefone>();
+        }
     }
 }
