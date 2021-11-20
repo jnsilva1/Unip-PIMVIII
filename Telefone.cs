@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -7,8 +8,11 @@ namespace CadastroPessoaFisica
     public class Telefone : IEquatable<Telefone>
     {
         protected internal int Id { get; set; }
+        [JsonProperty(nameof(Numero), IsReference = false)]
         public int Numero { get; set; }
+        [JsonProperty(nameof(Ddd), IsReference = false)]
         public int Ddd { get; set; }
+        [JsonProperty(nameof(Tipo), IsReference = true)]
         public TipoTelefone Tipo { get; set; }
 
         public Telefone()
@@ -16,7 +20,13 @@ namespace CadastroPessoaFisica
             Tipo = new TipoTelefone();
         }
 
-        
+        [JsonConstructor]
+        public Telefone(int numero, int ddd, TipoTelefone tipo)
+        {
+            Numero = numero;
+            Ddd = ddd;
+            Tipo = tipo;
+        }
 
         public override bool Equals(object obj)
         {
